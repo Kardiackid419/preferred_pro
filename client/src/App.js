@@ -1,10 +1,18 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from './context/ThemeContext'; // Ensure the correct path
-import Sidebar from './components/layout/Sidebar';
-import Schedule from './pages/Schedule';
-import AddJob from './pages/AddJob';
-import Settings from './pages/Settings';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { ThemeProvider } from "./context/ThemeContext"; // Ensure the correct path
+import Sidebar from "./components/layout/Sidebar";
+import Schedule from "./pages/Schedule";
+import AddJob from "./pages/AddJob";
+import Settings from "./pages/Settings";
+import { AuthProvider } from "./context/AuthContext";
+import Login from "./pages/Login";
+import PrivateRoute from "./components/PrivateRoute";
 
 const AppContent = () => {
   return (
@@ -14,7 +22,15 @@ const AppContent = () => {
         <Routes>
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/add-job" element={<AddJob />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route
+            path="/settings"
+            element={
+              <PrivateRoute>
+                <Settings />
+              </PrivateRoute>
+            }
+          />
+          <Route path="/login" element={<Login />} />
           <Route path="*" element={<Navigate to="/schedule" />} />
         </Routes>
       </div>
@@ -25,11 +41,13 @@ const AppContent = () => {
 const App = () => {
   return (
     <ThemeProvider>
-      <Router>
-        <Routes>
-          <Route path="/*" element={<AppContent />} />
-        </Routes>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/*" element={<AppContent />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 };
