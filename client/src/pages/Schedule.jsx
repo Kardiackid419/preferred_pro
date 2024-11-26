@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
@@ -6,6 +6,7 @@ import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useNavigate } from 'react-router-dom';
+import { getJobs } from '../firebase/collections';
 
 const locales = {
   'en-US': require('date-fns/locale/en-US'),
@@ -21,10 +22,16 @@ const localizer = dateFnsLocalizer({
 
 const Schedule = () => {
   const navigate = useNavigate();
-  const [jobs, setJobs] = useState(() => {
-    const savedJobs = localStorage.getItem('jobs');
-    return savedJobs ? JSON.parse(savedJobs) : [];
-  });
+  const [jobs, setJobs] = useState([]);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      const fetchedJobs = await getJobs();
+      setJobs(fetchedJobs);
+    };
+    
+    fetchJobs();
+  }, []);
 
   const handleDateClick = (date) => {
     const jobsOnDate = jobs.filter(

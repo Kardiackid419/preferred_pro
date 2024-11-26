@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { addJob } from '../firebase/collections';
+import { useNavigate } from 'react-router-dom';
 
 const AddJob = () => {
   const [jobName, setJobName] = useState('');
@@ -23,7 +25,7 @@ const AddJob = () => {
           const lng = place.geometry.location.lng();
           setAddress(place.formatted_address);
           setMapUrl(
-            `https://www.google.com/maps/embed/v1/place?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&q=${lat},${lng}`
+            `https://www.google.com/maps/embed/v1/place?key=AIzaSyAAsae7hTeyyWg8jKheIG3aU-lRX7AYQAM&q=${lat},${lng}`
           );
         }
       });
@@ -31,16 +33,24 @@ const AddJob = () => {
   }, []);
 
   // Handle Form Submission
-  const handleSubmit = (e) => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const jobData = {
-      jobName,
-      startDate,
-      endDate,
-      address,
+      title: jobName,
+      start: startDate,
+      end: endDate,
+      address: address,
+      mapUrl: mapUrl
     };
-    console.log('Job Submitted:', jobData);
-    // Save job data or perform additional logic here
+    
+    const result = await addJob(jobData);
+    if (result.success) {
+      navigate('/schedule');
+    } else {
+      alert('Failed to add job: ' + result.error);
+    }
   };
 
   return (

@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from './context/ThemeContext'; // Ensure the correct path
 import Sidebar from './components/layout/Sidebar';
 import Schedule from './pages/Schedule';
 import AddJob from './pages/AddJob';
-import Settings from './pages/Settings';
+import Login from './pages/Login';
+import Unauthorized from './pages/Unauthorized';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import { ThemeProvider } from './context/ThemeContext';
+import { useAuth } from './context/AuthContext';
 
 const AppContent = () => {
   return (
@@ -12,9 +15,17 @@ const AppContent = () => {
       <Sidebar />
       <div className="flex-1 pl-64">
         <Routes>
-          <Route path="/schedule" element={<Schedule />} />
-          <Route path="/add-job" element={<AddJob />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/schedule" element={
+            <ProtectedRoute>
+              <Schedule />
+            </ProtectedRoute>
+          } />
+          <Route path="/add-job" element={
+            <ProtectedRoute allowedRoles={['admin', 'foreman']}>
+              <AddJob />
+            </ProtectedRoute>
+          } />
+          <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="*" element={<Navigate to="/schedule" />} />
         </Routes>
       </div>
@@ -23,14 +34,36 @@ const AppContent = () => {
 };
 
 const App = () => {
+  const { logout } = useAuth();
+
+  useEffect(() => {
+    const handleTabClose = event => {
+      event.preventDefault();
+      logout();
+    };
+
+    window.addEventListener('unload', handleTabClose);
+    return () => {
+      window.removeEventListener('unload', handleTabClose);
+    };
+  }, [logout]);
+
   return (
-    <ThemeProvider>
-      <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <ThemeProvider>
         <Routes>
-          <Route path="/*" element={<AppContent />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/*"
+            element={
+              <ProtectedRoute>
+                <AppContent />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-      </Router>
-    </ThemeProvider>
+      </ThemeProvider>
+    </Router>
   );
 };
 

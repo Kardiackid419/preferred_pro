@@ -1,24 +1,33 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { auth, db } from '../firebase/config';
 import { 
   signInWithEmailAndPassword, 
   signOut, 
-  sendPasswordResetEmail,
   onAuthStateChanged 
 } from 'firebase/auth';
-import { auth } from '../firebase'; // Updated import path
+import { doc, getDoc } from 'firebase/firestore';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       setIsAuthenticated(!!user);
+      if (user) {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        setUserRole(userDoc.data()?.role || 'employee');
+      }
       setLoading(false);
     });
 
@@ -28,12 +37,16 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
+      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+      const role = userDoc.data()?.role || 'employee';
       setUser(result.user);
+      setUserRole(role);
       setIsAuthenticated(true);
       setError('');
-    } catch (err) {
-      setError('Failed to login. Please check your credentials.');
-      throw err;
+      return { success: true };
+    } catch (error) {
+      setError(error.message);
+      return { success: false, error: error.message };
     }
   };
 
@@ -41,45 +54,27 @@ export function AuthProvider({ children }) {
     try {
       await signOut(auth);
       setUser(null);
+      setUserRole(null);
       setIsAuthenticated(false);
       setError('');
-    } catch (err) {
-      setError('Failed to logout');
-      throw err;
-    }
-  };
-
-  const resetPassword = async (email) => {
-    try {
-      await sendPasswordResetEmail(auth, email);
-      setError('');
-    } catch (err) {
-      setError('Failed to send password reset email');
-      throw err;
+    } catch (error) {
+      setError(error.message);
     }
   };
 
   const value = {
     user,
-    login,
-    logout,
-    error,
-    resetPassword,
+    userRole,
     loading,
+    error,
     isAuthenticated,
+    login,
+    logout
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }
