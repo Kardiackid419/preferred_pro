@@ -5,7 +5,7 @@ import Schedule from './pages/Schedule';
 import AddJob from './pages/AddJob';
 import Login from './pages/Login';
 import Unauthorized from './pages/Unauthorized';
-import ProtectedRoute from './components/auth/ProtectedRoute';
+import ProtectedRoute from './components/auth/ProtectedRoute';  // Updated path
 import { ThemeProvider } from './context/ThemeContext';
 import { useAuth } from './context/AuthContext';
 
