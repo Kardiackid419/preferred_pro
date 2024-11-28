@@ -1,0 +1,29 @@
+/* Darker calendar lines */
+.rbc-calendar {
+    border: 1px solid #666 !important;
+  }
+  
+  .rbc-month-view {
+    border: 1px solid #666 !important;
+  }
+  
+  .rbc-day-bg + .rbc-day-bg,
+  .rbc-header + .rbc-header,
+  .rbc-time-header-content,
+  .rbc-time-content,
+  .rbc-time-slot,
+  .rbc-events-container,
+  .rbc-time-header-cell + .rbc-time-header-cell {
+    border-left: 1px solid #666 !important;
+  }
+  
+  .rbc-month-row + .rbc-month-row,
+  .rbc-day-slot .rbc-time-slot,
+  .rbc-header,
+  .rbc-time-header-content {
+    border-top: 1px solid #666 !important;
+  }
+  
+  .rbc-off-range-bg {
+    background-color: #f3f4f6 !important;
+  }

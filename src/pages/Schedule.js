@@ -5,6 +5,7 @@ import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import './Schedule.css';
 import { useAuth } from '../context/AuthContext';
 import { useJobs } from '../context/JobContext';
 import { useNavigate } from 'react-router-dom';

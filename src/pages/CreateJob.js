@@ -49,39 +49,42 @@ function CreateJob() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
+    if (!validateForm()) return;
+
     setIsLoading(true);
-    const newJob = {
-      ...jobData,
-      startDate: new Date(jobData.startDate),
-      endDate: new Date(jobData.endDate),
-      documents: []
-    };
-    
     try {
+      const newJob = {
+        ...jobData,
+        startDate: new Date(jobData.startDate),
+        endDate: new Date(jobData.endDate),
+        documents: [],
+        dayShift: [],
+        nightShift: [],
+        assignedEmployees: [],
+        createdBy: currentUser.email,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
       await addJob(newJob);
       navigate('/schedule');
     } catch (error) {
-      console.error("Error creating job: ", error);
-      setErrors({ submit: 'Failed to create job. Please try again.' });
+      console.error("Error creating job:", error);
+      setErrors({ submit: 'Failed to create job' });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navigation />
       
-      <main className="container mx-auto p-4">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold mb-6">Create New Job</h2>
+      <main className="container mx-auto p-6 max-w-4xl">
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <h2 className="text-3xl font-bold mb-8 text-gray-800 border-b pb-4">Create New Job</h2>
           
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

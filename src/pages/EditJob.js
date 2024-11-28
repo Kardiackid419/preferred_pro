@@ -4,6 +4,7 @@ import { useJobs } from '../context/JobContext';
 import { useAuth } from '../context/AuthContext';
 import Navigation from '../components/Navigation';
 import EmployeePool from '../components/EmployeePool';
+import { DragDropContext } from 'react-beautiful-dnd';
 
 function EditJob() {
   const { jobId } = useParams();
@@ -32,7 +33,10 @@ function EditJob() {
       setJobData({
         ...job,
         startDate: new Date(job.startDate).toISOString().split('T')[0],
-        endDate: new Date(job.endDate).toISOString().split('T')[0]
+        endDate: new Date(job.endDate).toISOString().split('T')[0],
+        dayShift: job.dayShift || [],
+        nightShift: job.nightShift || [],
+        assignedEmployees: job.assignedEmployees || []
       });
     }
   }, [jobId, jobs]);

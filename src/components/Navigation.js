@@ -1,91 +1,71 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Navigation() {
-  const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  const navigate = useNavigate();
+  const logo = "/images/preferred_logo.png";
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
-  const menuItems = {
-    crew: [
-      { title: 'Schedule', href: '/schedule' },
-      { title: 'My Jobs', href: '/my-jobs' }
-    ],
-    foreman: [
-      { title: 'Schedule', href: '/schedule' },
-      { title: 'My Jobs', href: '/my-jobs' },
-      { title: 'Foreman Tools', href: '/foreman' }
-    ],
-    admin: [
-      { title: 'Schedule', href: '/schedule' },
-      { title: 'All Jobs', href: '/jobs' },
-      { title: 'Create Job', href: '/jobs/create' },
-      { title: 'Manage Employees', href: '/employees' }
-    ]
+  const getRoleDisplay = (role) => {
+    switch (role) {
+      case 'admin':
+        return 'Signed in as Admin';
+      case 'foreman':
+        return 'Signed in as Foreman';
+      case 'crew':
+        return 'Signed in as Crew Member';
+      default:
+        return 'Signed in';
+    }
   };
 
   return (
-    <nav className="bg-preferred-green text-white">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <img
-              src="/images/preferred_logo.png"
-              alt="Preferred Pro"
-              className="h-8 w-auto"
-            />
-            <div className="relative ml-8" ref={menuRef}>
-              <button 
-                className="px-3 py-2 rounded-md text-sm font-medium hover:bg-preferred-green-dark"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-              >
-                Menu ▾
+    <nav className="bg-preferred-green p-4">
+      <div className="container mx-auto flex justify-between items-center">
+        <div className="flex items-center">
+          <img src={logo} alt="Preferred Pro" className="h-12 w-auto mr-8" />
+          <div className="flex items-center space-x-4">
+            <div className="group relative">
+              <button className="px-4 py-2 bg-white/10 rounded-md text-white hover:bg-white/20 transition-colors duration-200 flex items-center">
+                Menu
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
-              <div className={`absolute left-0 mt-2 w-screen max-w-md bg-white rounded-lg shadow-lg ${isMenuOpen ? 'block' : 'hidden'} z-50`}>
-                <div className="grid grid-cols-1 gap-4 p-4">
-                  {menuItems[currentUser.role].map(item => (
-                    <Link
-                      key={item.href}
-                      to={item.href}
-                      className="block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {item.title}
-                    </Link>
-                  ))}
+              <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                <div className="py-1 hover:block">
+                  <Link to="/schedule" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Schedule</Link>
+                  {currentUser?.role === 'admin' && (
+                    <>
+                      <Link to="/jobs/create" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Create Job</Link>
+                      <Link to="/employees" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Employees</Link>
+                    </>
+                  )}
+                  {currentUser?.role === 'foreman' && (
+                    <Link to="/foreman" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Foreman Tools</Link>
+                  )}
+                  <Link to="/all-jobs" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    All Jobs
+                  </Link>
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <span>{currentUser?.email}</span>
-            <button
-              onClick={handleLogout}
-              className="bg-white text-preferred-green px-4 py-2 rounded hover:bg-gray-100"
-            >
-              Logout
-            </button>
-          </div>
+        </div>
+        <div className="flex items-center space-x-4">
+          <span className="text-white">{getRoleDisplay(currentUser?.role)}</span>
+          <button 
+            onClick={handleLogout} 
+            className="px-4 py-2 bg-yellow-500 text-preferred-green font-medium rounded-md hover:bg-yellow-400 transition-colors duration-200"
+          >
+            Sign Out
+          </button>
         </div>
       </div>
     </nav>

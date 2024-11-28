@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, addDoc, getDocs, query, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-
+import { collection, addDoc, getDocs, query, deleteDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 const JobContext = createContext();
 
 export function useJobs() {
@@ -44,11 +43,21 @@ export function JobProvider({ children }) {
 
   const addJob = async (jobData) => {
     try {
-      const docRef = await addDoc(collection(db, "jobs"), jobData);
-      setJobs([...jobs, { ...jobData, id: docRef.id }]);
+      const docRef = await addDoc(collection(db, "jobs"), {
+        ...jobData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      
+      const newJob = {
+        ...jobData,
+        id: docRef.id
+      };
+      
+      setJobs(prev => [...prev, newJob]);
       return docRef.id;
     } catch (error) {
-      console.error("Error adding job: ", error);
+      console.error("Error adding job:", error);
       throw error;
     }
   };
@@ -65,10 +74,17 @@ export function JobProvider({ children }) {
 
   const updateJob = async (jobId, updatedData) => {
     try {
-      await updateDoc(doc(db, "jobs", jobId), updatedData);
-      setJobs(jobs.map(job => job.id === jobId ? { ...job, ...updatedData } : job));
+      await updateDoc(doc(db, "jobs", jobId), {
+        ...updatedData,
+        dayShift: updatedData.dayShift || [],
+        nightShift: updatedData.nightShift || [],
+        assignedEmployees: updatedData.assignedEmployees || []
+      });
+      setJobs(prev => prev.map(job => 
+        job.id === jobId ? { ...updatedData, id: jobId } : job
+      ));
     } catch (error) {
-      console.error("Error updating job: ", error);
+      console.error("Error updating job:", error);
       throw error;
     }
   };

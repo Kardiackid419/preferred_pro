@@ -1,161 +1,103 @@
 import React from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useJobs } from '../context/JobContext';
 
+const EmployeeCard = ({ employee, type, onMove }) => {
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: 'employee',
+    item: { id: employee.id, sourceType: type },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging()
+    })
+  }));
+
+  return (
+    <div
+      ref={drag}
+      className={`p-2 mb-2 rounded shadow-sm cursor-move ${
+        isDragging ? 'opacity-50' : type === 'pool' ? 'bg-blue-100' : 'bg-green-100'
+      }`}
+    >
+      {employee.name}
+    </div>
+  );
+};
+
+const DropZone = ({ type, employees, onDrop, title }) => {
+  const [{ isOver }, drop] = useDrop(() => ({
+    accept: 'employee',
+    drop: (item) => onDrop(item.id, item.sourceType, type),
+    collect: (monitor) => ({
+      isOver: monitor.isOver()
+    })
+  }));
+
+  return (
+    <div>
+      <h3 className="font-medium mb-2">{title}</h3>
+      <div
+        ref={drop}
+        className={`min-h-[200px] border rounded p-4 ${
+          isOver ? 'bg-gray-200' : 'bg-gray-50'
+        }`}
+      >
+        {employees.map(employee => (
+          <EmployeeCard
+            key={employee.id}
+            employee={employee}
+            type={type}
+            onMove={onDrop}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 function EmployeePool({ jobData, onAssignEmployee, onUnassignEmployee }) {
-  const { employees, jobs } = useJobs();
+  const { employees } = useJobs();
 
-  const checkEmployeeAvailability = (employeeId) => {
-    const start = new Date(jobData.startDate);
-    const end = new Date(jobData.endDate);
+  const handleDrop = (employeeId, sourceType, targetType) => {
+    if (sourceType === targetType) return;
     
-    const isAvailable = !jobs.some(job => {
-      if (job.id === jobData.id) return false;
-      
-      const jobStart = new Date(job.startDate);
-      const jobEnd = new Date(job.endDate);
-      
-      const hasOverlap = (
-        (start <= jobEnd && start >= jobStart) ||
-        (end >= jobStart && end <= jobEnd) ||
-        (start <= jobStart && end >= jobEnd)
-      );
-      
-      return hasOverlap && job.assignedEmployees.includes(employeeId);
-    });
-
-    return isAvailable;
-  };
-
-  const onDragEnd = (result) => {
-    if (!result.destination) return;
-    
-    const { source, destination, draggableId } = result;
-    
-    if (source.droppableId === destination.droppableId) return;
-
-    if (destination.droppableId === 'dayShift') {
-      onAssignEmployee(draggableId, 'day');
-    } else if (destination.droppableId === 'nightShift') {
-      onAssignEmployee(draggableId, 'night');
-    } else if (destination.droppableId === 'pool') {
-      onUnassignEmployee(draggableId);
+    if (sourceType === 'pool') {
+      onAssignEmployee(employeeId, targetType === 'dayShift' ? 'day' : 'night');
+    } else if (targetType === 'pool') {
+      onUnassignEmployee(employeeId);
+    } else {
+      onUnassignEmployee(employeeId);
+      onAssignEmployee(employeeId, targetType === 'dayShift' ? 'day' : 'night');
     }
   };
 
+  const poolEmployees = employees.filter(emp => !jobData.assignedEmployees.includes(emp.id));
+  const dayShiftEmployees = employees.filter(emp => jobData.dayShift?.includes(emp.id));
+  const nightShiftEmployees = employees.filter(emp => jobData.nightShift?.includes(emp.id));
+
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+    <DndProvider backend={HTML5Backend}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <div>
-          <h3 className="font-medium mb-2">Employee Pool</h3>
-          <Droppable droppableId="pool">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="min-h-[200px] border rounded p-4"
-              >
-                {employees
-                  .filter(emp => !jobData.assignedEmployees.includes(emp.id))
-                  .map((employee, index) => (
-                    <Draggable
-                      key={employee.id}
-                      draggableId={employee.id}
-                      index={index}
-                    >
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className={`p-2 mb-2 rounded shadow-sm ${
-                            checkEmployeeAvailability(employee.id) 
-                              ? 'bg-blue-100' 
-                              : 'bg-red-100'
-                          }`}
-                        >
-                          {employee.name}
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </div>
-
-        <div>
-          <h3 className="font-medium mb-2">Day Shift</h3>
-          <Droppable droppableId="dayShift">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="min-h-[200px] border rounded p-4"
-              >
-                {employees
-                  .filter(emp => jobData.dayShift?.includes(emp.id))
-                  .map((employee, index) => (
-                    <Draggable
-                      key={employee.id}
-                      draggableId={employee.id}
-                      index={index}
-                    >
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="p-2 mb-2 bg-green-100 rounded shadow-sm"
-                        >
-                          {employee.name}
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </div>
-
-        <div>
-          <h3 className="font-medium mb-2">Night Shift</h3>
-          <Droppable droppableId="nightShift">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="min-h-[200px] border rounded p-4"
-              >
-                {employees
-                  .filter(emp => jobData.nightShift?.includes(emp.id))
-                  .map((employee, index) => (
-                    <Draggable
-                      key={employee.id}
-                      draggableId={employee.id}
-                      index={index}
-                    >
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="p-2 mb-2 bg-green-100 rounded shadow-sm"
-                        >
-                          {employee.name}
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </div>
+        <DropZone
+          type="pool"
+          employees={poolEmployees}
+          onDrop={handleDrop}
+          title="Employee Pool"
+        />
+        <DropZone
+          type="dayShift"
+          employees={dayShiftEmployees}
+          onDrop={handleDrop}
+          title="Day Shift"
+        />
+        <DropZone
+          type="nightShift"
+          employees={nightShiftEmployees}
+          onDrop={handleDrop}
+          title="Night Shift"
+        />
       </div>
-    </DragDropContext>
+    </DndProvider>
   );
 }
 

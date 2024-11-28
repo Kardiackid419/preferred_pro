@@ -7,6 +7,7 @@ import CreateJob from './pages/CreateJob';
 import Employees from './pages/Employees';
 import ForemanTools from './pages/ForemanTools';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import AllJobs from './pages/AllJobs';
 
 function App() {
   return (
@@ -51,6 +52,14 @@ function App() {
           element={
             <ProtectedRoute requiredRole="crew">
               <Schedule />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/all-jobs" 
+          element={
+            <ProtectedRoute requiredRole="crew">
+              <AllJobs />
             </ProtectedRoute>
           } 
         />
