@@ -1,70 +1,71 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Sidebar from './components/layout/Sidebar';
-import Schedule from './pages/Schedule';
-import AddJob from './pages/AddJob';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
-import Unauthorized from './pages/Unauthorized';
-import ProtectedRoute from './components/auth/ProtectedRoute';  // Updated path
-import { ThemeProvider } from './context/ThemeContext';
-import { useAuth } from './context/AuthContext';
+import Schedule from './pages/Schedule';
+import EditJob from './pages/EditJob';
+import CreateJob from './pages/CreateJob';
+import Employees from './pages/Employees';
+import ForemanTools from './pages/ForemanTools';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import AllJobs from './pages/AllJobs';
 
-const AppContent = () => {
+function App() {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 pl-64">
-        <Routes>
-          <Route path="/schedule" element={
-            <ProtectedRoute>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Login />} />
+        <Route 
+          path="/jobs/create" 
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <CreateJob />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/job/:jobId" 
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <EditJob />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/employees" 
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <Employees />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/foreman" 
+          element={
+            <ProtectedRoute requiredRole="foreman">
+              <ForemanTools />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/schedule" 
+          element={
+            <ProtectedRoute requiredRole="crew">
               <Schedule />
             </ProtectedRoute>
-          } />
-          <Route path="/add-job" element={
-            <ProtectedRoute allowedRoles={['admin', 'foreman']}>
-              <AddJob />
+          } 
+        />
+        <Route 
+          path="/all-jobs" 
+          element={
+            <ProtectedRoute requiredRole="crew">
+              <AllJobs />
             </ProtectedRoute>
-          } />
-          <Route path="/unauthorized" element={<Unauthorized />} />
-          <Route path="*" element={<Navigate to="/schedule" />} />
-        </Routes>
-      </div>
-    </div>
-  );
-};
-
-const App = () => {
-  const { logout } = useAuth();
-
-  useEffect(() => {
-    const handleTabClose = event => {
-      event.preventDefault();
-      logout();
-    };
-
-    window.addEventListener('unload', handleTabClose);
-    return () => {
-      window.removeEventListener('unload', handleTabClose);
-    };
-  }, [logout]);
-
-  return (
-    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <ThemeProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <AppContent />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </ThemeProvider>
+          } 
+        />
+      </Routes>
     </Router>
   );
-};
+}
 
 export default App;

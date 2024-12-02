@@ -1,87 +1,49 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { auth, db } from '../firebase/config';
-import { doc, getDoc } from 'firebase/firestore';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import React, { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext();
 
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const login = async (email, password) => {
-    try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-      if (!userDoc.exists()) {
-        throw new Error('User document not found');
-      }
-      const userData = userDoc.data();
-      setCurrentUser({
-        uid: result.user.uid,
-        email: result.user.email,
-        role: userData.role,
-        name: userData.name
-      });
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
+    // Mock login - in production this would verify credentials with a backend
+    setCurrentUser({
+      email: email,
+      role: 'admin', // Set role to admin for testing
+      id: '1'
+    });
   };
 
   const logout = async () => {
-    try {
-      await auth.signOut();
-      setCurrentUser(null);
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
+    setCurrentUser(null);
   };
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      try {
-        if (user) {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setCurrentUser({
-              uid: user.uid,
-              email: user.email,
-              role: userData.role,
-              name: userData.name
-            });
-          }
-        } else {
-          setCurrentUser(null);
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
+  const hasPermission = (requiredRole) => {
+    if (!currentUser) return false;
+    
+    const roleHierarchy = {
+      admin: 3,
+      foreman: 2,
+      crew: 1
+    };
+    
+    return roleHierarchy[currentUser.role] >= roleHierarchy[requiredRole];
+  };
 
   const value = {
     currentUser,
     login,
     logout,
-    error,
-    loading
+    hasPermission
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
 }

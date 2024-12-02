@@ -5,10 +5,11 @@ module.exports = {
   ],
   theme: {
     extend: {
-      animation: {
-        'spin': 'spin 3s linear infinite',
-      },
+      colors: {
+        'preferred-green': '#006838',
+      }
     },
   },
   plugins: [],
 }
+
