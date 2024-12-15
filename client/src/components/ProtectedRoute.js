@@ -1,16 +1,15 @@
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
-export function ProtectedRoute({ children, requiredRole }) {
-  const { currentUser, hasPermission } = useAuth();
+function ProtectedRoute({ children }) {
+  const { currentUser } = useAuth();
 
   if (!currentUser) {
     return <Navigate to="/login" />;
   }
 
-  if (requiredRole && !hasPermission(requiredRole)) {
-    return <Navigate to="/schedule" />;
-  }
-
   return children;
 }
+
+export default ProtectedRoute;
