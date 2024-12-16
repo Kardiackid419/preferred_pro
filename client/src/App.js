@@ -7,7 +7,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import UserProfile from './pages/UserProfile';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './pages/AdminDashboard';
-import EmployeeDashboard from './pages/EmployeeDashboard';
+import Schedule from './pages/Schedule';
 
 function App() {
   return (
@@ -40,7 +40,7 @@ function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <EmployeeDashboard />
+                <Schedule />
               </ProtectedRoute>
             }
           />

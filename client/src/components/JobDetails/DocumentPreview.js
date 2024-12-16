@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { storage } from '../../firebase';
+import { storage } from '../../firebase/config';
 
 function DocumentPreview({ jobId }) {
   const [documents, setDocuments] = useState([]);

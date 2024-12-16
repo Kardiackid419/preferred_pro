@@ -2,6 +2,7 @@ import { db } from './config';
 import { collection, addDoc, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getMessaging, getToken } from 'firebase/messaging';
+import { auth } from './config';
 
 // Notification channels
 export const CHANNELS = {
