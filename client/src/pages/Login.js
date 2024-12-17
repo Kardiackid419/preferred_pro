@@ -19,7 +19,7 @@ function Login() {
 
     try {
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      navigate('/dashboard');
+      navigate('/');
     } catch (err) {
       setError('Failed to sign in. Please check your credentials.');
       console.error(err);

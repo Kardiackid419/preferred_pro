@@ -6,8 +6,8 @@ import SignUp from './pages/SignUp';
 import ForgotPassword from './pages/ForgotPassword';
 import UserProfile from './pages/UserProfile';
 import ProtectedRoute from './components/ProtectedRoute';
-import AdminDashboard from './pages/AdminDashboard';
 import Schedule from './pages/Schedule';
+import AdminTools from './components/AdminTools';
 
 function App() {
   return (
@@ -29,18 +29,18 @@ function App() {
             }
           />
           <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/"
             element={
               <ProtectedRoute>
                 <Schedule />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-tools"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminTools />
               </ProtectedRoute>
             }
           />

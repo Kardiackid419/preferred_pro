@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
 function Navigation() {
@@ -32,7 +32,7 @@ function Navigation() {
           <img src={logo} alt="Preferred Pro" className="h-12 w-auto mb-4" />
           <div className="flex justify-between w-full px-4">
             <div className="group relative">
-              <button className="px-4 py-2 bg-white/10 rounded-md text-white hover:bg-white/20 transition-colors duration-200 flex items-center">
+              <button className="px-4 py-2 bg-yellow-500 text-preferred-green font-medium rounded-md hover:bg-yellow-400 transition-colors duration-200 flex items-center">
                 Menu
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -45,6 +45,7 @@ function Navigation() {
                     <>
                       <Link to="/jobs/create" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Create Job</Link>
                       <Link to="/employees" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Employees</Link>
+                      <Link to="/admin-tools" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Admin Tools</Link>
                     </>
                   )}
                   {currentUser?.role === 'foreman' && (
