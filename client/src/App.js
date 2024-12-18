@@ -8,11 +8,16 @@ import UserProfile from './pages/UserProfile';
 import ProtectedRoute from './components/ProtectedRoute';
 import Schedule from './pages/Schedule';
 import AdminTools from './components/AdminTools';
+import AllJobs from './pages/AllJobs';
+import JobDetails from './pages/JobDetails';
+import OfflineDetector from './components/OfflineDetector';
+import Employees from './pages/Employees';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
+        <OfflineDetector />
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
@@ -41,6 +46,38 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <AdminTools />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/all-jobs"
+            element={
+              <ProtectedRoute>
+                <AllJobs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/job/:jobId"
+            element={
+              <ProtectedRoute>
+                <JobDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/schedule"
+            element={
+              <ProtectedRoute>
+                <Schedule />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/employees"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <Employees />
               </ProtectedRoute>
             }
           />

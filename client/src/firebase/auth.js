@@ -46,12 +46,13 @@ export const createUser = async (email, password) => {
 // Admin function to update user role
 export const updateUserRole = async (userId, newRole) => {
   try {
-    await setDoc(doc(db, 'users', userId), {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
       role: newRole
-    }, { merge: true });  // merge: true ensures we only update the role field
-    
+    });
     return true;
   } catch (error) {
+    console.error('Error updating user role:', error);
     throw error;
   }
 };
@@ -209,6 +210,22 @@ export const createUserWithPhone = async (userData) => {
     await sendPhoneVerification(userData.phone);
 
     return user;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getUsers = async () => {
+  try {
+    const response = await fetch('/api/getUsers', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch users');
+    return await response.json();
   } catch (error) {
     throw error;
   }

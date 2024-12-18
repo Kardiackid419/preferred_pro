@@ -1,82 +1,76 @@
-import React, { useState } from 'react';
-import Navigation from '../components/Navigation';
-import { useJobs } from '../context/JobContext';
+import React, { useState, useEffect } from 'react';
+import { db } from '../firebase/config';
+import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import EmployeePool from '../components/EmployeePool';
 
 function Employees() {
-  const { employees, addEmployee, removeEmployee } = useJobs();
-  const [newEmployeeName, setNewEmployeeName] = useState('');
-  const [error, setError] = useState('');
+  const [employees, setEmployees] = useState([]);
+  const [unassignedUsers, setUnassignedUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleAddEmployee = async (e) => {
-    e.preventDefault();
-    if (newEmployeeName.length < 2) {
-      setError('Employee name must be at least 2 characters');
-      return;
-    }
-    try {
-      await addEmployee({ name: newEmployeeName });
-      setNewEmployeeName('');
-      setError('');
-    } catch (err) {
-      setError('Failed to add employee');
-    }
-  };
-
-  const handleRemoveEmployee = async (employeeId) => {
-    if (window.confirm('Are you sure you want to remove this employee?')) {
+  useEffect(() => {
+    const fetchUsersAndEmployees = async () => {
       try {
-        await removeEmployee(employeeId);
-      } catch (err) {
-        setError('Failed to remove employee');
+        const querySnapshot = await getDocs(collection(db, 'users'));
+        const allUsers = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          assigned: false
+        }));
+
+        const employeesList = allUsers.filter(user => user.role === 'crew');
+        setEmployees(employeesList);
+        
+        const unassigned = allUsers.filter(user => !user.role || user.role === 'default');
+        setUnassignedUsers(unassigned);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
       }
-    }
-  };
+    };
+
+    fetchUsersAndEmployees();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Navigation />
-      <main className="container mx-auto p-4">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold mb-6">Manage Employees</h2>
-          
-          <form onSubmit={handleAddEmployee} className="mb-8">
-            <div className="flex gap-4">
-              <input
-                type="text"
-                value={newEmployeeName}
-                onChange={(e) => setNewEmployeeName(e.target.value)}
-                placeholder="Enter employee name"
-                className="flex-1 p-2 border rounded focus:ring-preferred-green focus:border-preferred-green"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-preferred-green text-white rounded hover:bg-preferred-green/90"
-              >
-                Add Employee
-              </button>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">Employee Management</h1>
+      
+      {/* Employee Pool Component */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold mb-4">Employee Pool</h2>
+        <EmployeePool employees={employees} />
+      </div>
+
+      {/* Unassigned Users Section */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold mb-4">Available Users</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {unassignedUsers.map(user => (
+            <div 
+              key={user.id} 
+              className="bg-white rounded-lg shadow-md p-4"
+            >
+              <h3 className="text-lg font-semibold">{user.email}</h3>
+              <p className="text-gray-600">
+                Signed up: {new Date(user.createdAt?.seconds * 1000).toLocaleDateString()}
+              </p>
             </div>
-            {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
-          </form>
-
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {employees.map(employee => (
-              <div 
-                key={employee.id}
-                className="flex justify-between items-center p-3 border rounded hover:bg-gray-50"
-              >
-                <span>{employee.name}</span>
-                <button
-                  onClick={() => handleRemoveEmployee(employee.id)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
-      </main>
+        {unassignedUsers.length === 0 && (
+          <p className="text-center text-gray-500">No unassigned users found.</p>
+        )}
+      </div>
     </div>
   );
 }

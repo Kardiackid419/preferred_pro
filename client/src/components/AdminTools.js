@@ -6,10 +6,16 @@ function AdminTools() {
   const [users, setUsers] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
+      setError(null);
       try {
+        if (!navigator.onLine) {
+          throw new Error('You are currently offline. Please check your internet connection.');
+        }
+
         // Fetch all users
         const usersSnapshot = await getDocs(collection(db, 'users'));
         const usersData = usersSnapshot.docs.map(doc => ({
@@ -29,6 +35,7 @@ function AdminTools() {
         setLoading(false);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setError(error.message);
         setLoading(false);
       }
     };
@@ -68,6 +75,12 @@ function AdminTools() {
 
   return (
     <div className="container mx-auto p-4">
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <strong className="font-bold">Error:</strong>
+          <span className="block sm:inline"> {error}</span>
+        </div>
+      )}
       <h2 className="text-2xl font-bold mb-6">Admin Tools</h2>
       
       {/* User Role Management */}

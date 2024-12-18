@@ -1,6 +1,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
+const cors = require('cors');
 
 admin.initializeApp();
 
@@ -99,3 +100,64 @@ exports.onUserVerificationStatusChange = functions.firestore
       await Promise.all(notifications);
     }
   });
+
+exports.getUsers = functions.https.onRequest(async (req, res) => {
+  cors(req, res, async () => {
+    try {
+      // Verify authentication
+      const authToken = req.headers.authorization?.split('Bearer ')[1];
+      const decodedToken = await admin.auth().verifyIdToken(authToken);
+      
+      // Check if user is admin or superadmin
+      const userDoc = await admin.firestore().collection('users').doc(decodedToken.uid).get();
+      const userRole = userDoc.data()?.role;
+      
+      if (userRole !== 'admin' && userRole !== 'superadmin') {
+        throw new Error('Unauthorized access');
+      }
+
+      // Get all users
+      const usersList = await admin.auth().listUsers();
+      const usersData = await Promise.all(usersList.users.map(async (user) => {
+        const userData = await admin.firestore().collection('users').doc(user.uid).get();
+        return {
+          ...user,
+          role: userData.data()?.role || 'user'
+        };
+      }));
+
+      res.json(usersData);
+    } catch (error) {
+      res.status(403).json({ error: error.message });
+    }
+  });
+});
+
+exports.updateUserRole = functions.https.onRequest(async (req, res) => {
+  cors(req, res, async () => {
+    try {
+      // Verify authentication
+      const authToken = req.headers.authorization?.split('Bearer ')[1];
+      const decodedToken = await admin.auth().verifyIdToken(authToken);
+      
+      // Check if user is superadmin
+      const userDoc = await admin.firestore().collection('users').doc(decodedToken.uid).get();
+      const userRole = userDoc.data()?.role;
+      
+      if (userRole !== 'superadmin') {
+        throw new Error('Unauthorized access');
+      }
+
+      const { userId, newRole } = req.body;
+      
+      // Update user role in Firestore
+      await admin.firestore().collection('users').doc(userId).update({
+        role: newRole
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      res.status(403).json({ error: error.message });
+    }
+  });
+});

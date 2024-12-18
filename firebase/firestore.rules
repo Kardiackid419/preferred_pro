@@ -1,31 +1,26 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
-    }
-    
-    function isEmailVerified() {
-      return request.auth.token.email_verified;
-    }
-    
+    // Helper function to check if user is admin
     function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
+    }
+
+    // Helper function to check if user is superadmin
+    function isSuperAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+    }
+
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && (
+        // Allow users to update their own non-role fields
+        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) ||
+        // Allow superadmins to update everything including roles
+        isSuperAdmin()
+      );
     }
     
-    // Users collection
-    match /users/{userId} {
-      // Users can read their own document
-      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-      // Only admins can update roles
-      allow update: if isSignedIn() && (
-        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']))
-        || isAdmin()
-      );
-      // Allow creation with basic role
-      allow create: if request.auth.uid == userId 
-        && request.resource.data.role == 'employee';
-    }
+    // ... other rules ...
   }
 } 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useJobs } from '../context/JobContext';
+import { useJobs } from '../contexts/JobContext';
 import Navigation from '../components/Navigation';
 
 function AllJobs() {

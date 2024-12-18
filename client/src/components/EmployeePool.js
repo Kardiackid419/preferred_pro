@@ -1,7 +1,7 @@
 import React from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { useJobs } from '../context/JobContext';
+import { useJobs } from '../contexts/JobContext';
 
 const EmployeeCard = ({ employee, type, onMove }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
